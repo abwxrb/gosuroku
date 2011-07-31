@@ -23,31 +23,27 @@ class Player_pic
   
   def draw
     x, y = @player_data.pos
-    # p x, y, @player_data.direction,  @player_data::Direction
     base = Player_data::Direction[@player_data.direction]
     base = base * OFFSET
     i = Gosu::milliseconds / 200 % OFFSET
-    # @i += 1
-    # @i %= OFFSET
     @image[base + i].draw(Map_pic::WIDTH * x + @x_offset, Map_pic::HEIGHT * y + @y_offset, 0)
   end
 end
 
 class Player_data
   attr_accessor :id, :pos, :direction, :name, :items, :life, :flag, :map_data
-  # attr_reader   :Direction
 
   Direction = {
-    'U' => 0,
-    'B' => 1,
-    'L' => 2,
-    'R' => 3
+    :U => 0,
+    :B => 1,
+    :L => 2,
+    :R => 3
   }
 
   def initialize(map_data)
     @id  = nil
     @pos = [0,0]
-    @direction = 'B'
+    @direction = :B
     @name
     @items = []
     @life = 100
@@ -59,16 +55,16 @@ class Player_data
     @direction = direction
     dx, dy = @pos
     case direction
-    when 'U'
+    when :U
       dy -= 1
       @pos = [dx, dy] if @map_data.is_accessible?(dx, dy)
-    when 'B'
+    when :B
       dy += 1
       @pos = [dx, dy] if @map_data.is_accessible?(dx, dy)
-    when 'L'
+    when :L
       dx -= 1
       @pos = [dx, dy] if @map_data.is_accessible?(dx, dy)
-    when 'R'
+    when :R
       dx += 1
       @pos = [dx, dy] if @map_data.is_accessible?(dx, dy)
     else
@@ -331,13 +327,13 @@ class GameWindow < Gosu::Window
         @evt_mng.push(Event.new.create_dice_event(@player_data, remain)) if remain > 0
       when :dice
         if button_down? Gosu::KbUp or button_down? Gosu::GpUp
-          @evt_mng.push(Event.new.create_player_move(@player_data, 'U', evt.value))
+          @evt_mng.push(Event.new.create_player_move(@player_data, :U, evt.value))
         elsif button_down? Gosu::KbDown or button_down? Gosu::GpDown
-          @evt_mng.push(Event.new.create_player_move(@player_data, 'B', evt.value))
+          @evt_mng.push(Event.new.create_player_move(@player_data, :B, evt.value))
         elsif button_down? Gosu::KbLeft or button_down? Gosu::GpLeft
-          @evt_mng.push(Event.new.create_player_move(@player_data, 'L', evt.value))
+          @evt_mng.push(Event.new.create_player_move(@player_data, :L, evt.value))
         elsif button_down? Gosu::KbRight or button_down? Gosu::GpRight
-          @evt_mng.push(Event.new.create_player_move(@player_data, 'R', evt.value))
+          @evt_mng.push(Event.new.create_player_move(@player_data, :R, evt.value))
         else
           @evt_mng.push(evt)
         end
