@@ -2,7 +2,7 @@ LICENSE
 
 = Graphic
 Files in directory of pic/map,pic/player are customized. Original file is in website below.
-Please must read below.
+Do not reuse customized files. Please must read below.
 
 "Some (All) of graphic data in this software are free game resources distributed by REFMAP(http://www.tekepon.net/fsm).
 You must not use the graphic data which is in this software, for the purpose except playing this game. When you want to get these resources, go to the website above."

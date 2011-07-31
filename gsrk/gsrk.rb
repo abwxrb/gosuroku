@@ -26,9 +26,10 @@ class Player_pic
     # p x, y, @player_data.direction,  @player_data::Direction
     base = Player_data::Direction[@player_data.direction]
     base = base * OFFSET
-    @i += 1
-    @i %= OFFSET
-    @image[base + @i].draw(Map_pic::WIDTH * x + @x_offset, Map_pic::HEIGHT * y + @y_offset, 0)
+    i = Gosu::milliseconds / 200 % OFFSET
+    # @i += 1
+    # @i %= OFFSET
+    @image[base + i].draw(Map_pic::WIDTH * x + @x_offset, Map_pic::HEIGHT * y + @y_offset, 0)
   end
 end
 
@@ -71,6 +72,7 @@ class Player_data
       dx += 1
       @pos = [dx, dy] if @map_data.is_accessible?(dx, dy)
     else
+      nil
     end
   end
   
@@ -227,6 +229,65 @@ class Map_data
   end
 end
 
+class Event
+  def initialize
+    @id = nil
+    @type = nil
+
+    open_attr
+  end
+
+  def open_attr
+    self.instance_variables.map do |var|
+      self.class.send(:attr_accessor, var.to_s.delete('@'))
+    end
+  end
+
+  def reset
+    self.instance_variables.map do |var|
+      self.instance_variable_set(var, nil)
+    end
+  end
+
+  def create_dice_event(player, value)
+    @id = player.id
+    @type = :dice
+    @value = value
+    open_attr
+    self
+  end
+
+  def create_player_move(player, direction, remain)
+    @id = player.id
+    @type = :p_move
+    @direction = direction
+    @remain = remain
+    open_attr
+    self
+  end
+end
+
+class Event_manager
+  # attr_reader :q
+  DummyEVT = Event.new
+  
+  def initialize
+    @q = []
+  end
+  
+  def pop
+    evt = @q.pop
+    if evt.nil?
+      evt = DummyEVT
+    end
+    return evt
+  end
+  
+  def push(evt)
+    @q.push(evt)
+  end
+end
+
 class GameWindow < Gosu::Window
   VERSION = 0.01
 
@@ -235,20 +296,59 @@ class GameWindow < Gosu::Window
     self.caption = "Gosuroku #{VERSION}"
 
     @map_data = Map_data.new
-    p @map_data.load(File.join( File.dirname(__FILE__), '..', 'map_data', 'map02.txt'))
+    @map_data.load(File.join( File.dirname(__FILE__), '..', 'map_data', 'map02.txt'))
     @map_pic  = Map_pic.new(self)
     @map_pic.load_pic(File.join( File.dirname(__FILE__), '..', 'pic', 'map', 'map_set.bmp'))
     @map_pic.load_map_data(@map_data)
     @player_data = Player_data.new(@map_data)
     @player_data.set_pos
+    @player = Hash.new
+    @player_data.id = 'aboutwxruby'.to_sym
+    @player[@player_data.id] = @player_data
     @player_pic = Player_pic.new(self)
     @player_pic.load_pic(File.join( File.dirname(__FILE__), '..', 'pic', 'player', 'player_set.bmp'))
     @player_pic.load_player_data(@player_data)
-    p @map_data.map_d
-    p @map_data.player_pos
+    @map_data.map_d
+    @map_data.player_pos
+    
+    @evt_mng = Event_manager.new
+    @evt_mng.push(Event.new.create_dice_event(@player_data, 6))
+    p @evt_mng
   end
 
   def update
+    evt = @evt_mng.pop 
+    p 'evt', evt
+      case evt.type
+      when :p_move
+        player = @player[evt.id]
+        ret = player.move(evt.direction)
+        unless ret.nil?
+          remain = evt.remain - 1
+        else
+          remain = evt.remain
+        end
+        @evt_mng.push(Event.new.create_dice_event(@player_data, remain)) if remain > 0
+      when :dice
+        if button_down? Gosu::KbUp or button_down? Gosu::GpUp
+          @evt_mng.push(Event.new.create_player_move(@player_data, 'U', evt.value))
+        elsif button_down? Gosu::KbDown or button_down? Gosu::GpDown
+          @evt_mng.push(Event.new.create_player_move(@player_data, 'B', evt.value))
+        elsif button_down? Gosu::KbLeft or button_down? Gosu::GpLeft
+          @evt_mng.push(Event.new.create_player_move(@player_data, 'L', evt.value))
+        elsif button_down? Gosu::KbRight or button_down? Gosu::GpRight
+          @evt_mng.push(Event.new.create_player_move(@player_data, 'R', evt.value))
+        else
+          @evt_mng.push(evt)
+        end
+      else
+      end # unless evt.nil?
+    # end
+    # twitter
+    # thd = Thread.start do
+      # while (evt = evt_mng.q.pop )
+      # end
+    # end
   end
 
   def draw
