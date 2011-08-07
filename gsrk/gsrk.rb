@@ -5,11 +5,15 @@ require File.join( dir,'gsrk_pic.rb')
 require File.join( dir,'gsrk_data.rb')
 require File.join( dir,'gsrk_event.rb')
 
-class GameWindow < Gosu::Window
+module ZOrder
+  Map_pic, Player_pic = *0..3
+end
+
+class Main_Window < Gosu::Window
   VERSION = 0.01
 
   def initialize
-    super(1024, 480, false)
+    super(640, 480, false)
     self.caption = "Gosuroku #{VERSION}"
 
     @map_data = Map_data.new
@@ -35,31 +39,35 @@ class GameWindow < Gosu::Window
 
   def update
     evt = @evt_mng.pop 
-    p 'evt', evt
-      case evt.type
-      when :p_move
-        player = @player[evt.id]
-        ret = player.move(evt.direction)
-        unless ret.nil?
-          remain = evt.remain - 1
-        else
-          remain = evt.remain
-        end
-        @evt_mng.push(Event.new.create_dice_event(@player_data, remain)) if remain > 0
-      when :dice
-        if button_down? Gosu::KbUp or button_down? Gosu::GpUp
-          @evt_mng.push(Event.new.create_player_move(@player_data, :U, evt.value))
-        elsif button_down? Gosu::KbDown or button_down? Gosu::GpDown
-          @evt_mng.push(Event.new.create_player_move(@player_data, :B, evt.value))
-        elsif button_down? Gosu::KbLeft or button_down? Gosu::GpLeft
-          @evt_mng.push(Event.new.create_player_move(@player_data, :L, evt.value))
-        elsif button_down? Gosu::KbRight or button_down? Gosu::GpRight
-          @evt_mng.push(Event.new.create_player_move(@player_data, :R, evt.value))
-        else
-          @evt_mng.push(evt)
-        end
+    player = @player[evt.id]
+    unless player.nil? || player.status == :NOTHING
+      @evt_mng.push(evt)
+      return
+    end
+    
+    case evt.type
+    when :p_move
+      ret = player.move(evt.direction)
+      unless ret.nil?
+        remain = evt.remain - 1
       else
-      end # unless evt.nil?
+        remain = evt.remain
+      end
+      @evt_mng.push(Event.new.create_dice_event(player, remain)) if remain > 0
+    when :dice
+      if button_down? Gosu::KbUp or button_down? Gosu::GpUp
+        @evt_mng.push(Event.new.create_player_move(player, :U, evt.value))
+      elsif button_down? Gosu::KbDown or button_down? Gosu::GpDown
+        @evt_mng.push(Event.new.create_player_move(player, :B, evt.value))
+      elsif button_down? Gosu::KbLeft or button_down? Gosu::GpLeft
+        @evt_mng.push(Event.new.create_player_move(player, :L, evt.value))
+      elsif button_down? Gosu::KbRight or button_down? Gosu::GpRight
+        @evt_mng.push(Event.new.create_player_move(player, :R, evt.value))
+      else
+        @evt_mng.push(evt)
+      end
+    else
+    end # unless evt.nil?
     # end
     # twitter
     # thd = Thread.start do
@@ -69,8 +77,10 @@ class GameWindow < Gosu::Window
   end
 
   def draw
-    @map_pic.draw
-    @player_pic.draw
+    translate -100,-100 do
+      @map_pic.draw
+      @player_pic.draw
+    end
   end
 
   def button_down(id)
@@ -79,5 +89,5 @@ class GameWindow < Gosu::Window
     end
   end
 end
-window = GameWindow.new
+window = Main_Window.new
 window.show

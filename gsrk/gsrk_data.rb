@@ -1,5 +1,5 @@
 ﻿class Player_data
-  attr_accessor :id, :pos, :direction, :name, :items, :life, :flag, :map_data
+  attr_accessor :id, :pos, :direction, :name, :items, :hp, :mp, :flag, :map_data, :status
 
   Direction = {
     :U => 0,
@@ -14,9 +14,11 @@
     @direction = :B
     @name
     @items = []
-    @life = 100
+    @hp = 100
+    @mp = 100
     @flag = []
     @map_data = map_data
+    @status = :NOTHING
   end
   
   def move(direction)
@@ -25,16 +27,28 @@
     case direction
     when :U
       dy -= 1
-      @pos = [dx, dy] if @map_data.is_accessible?(dx, dy)
+      if @map_data.is_accessible?(dx, dy)
+        @pos = [dx, dy]
+        @status = :MOVE
+      end
     when :B
       dy += 1
-      @pos = [dx, dy] if @map_data.is_accessible?(dx, dy)
+      if @map_data.is_accessible?(dx, dy)
+        @pos = [dx, dy]
+        @status = :MOVE
+      end
     when :L
       dx -= 1
-      @pos = [dx, dy] if @map_data.is_accessible?(dx, dy)
+      if @map_data.is_accessible?(dx, dy)
+        @pos = [dx, dy]
+        @status = :MOVE
+      end
     when :R
       dx += 1
-      @pos = [dx, dy] if @map_data.is_accessible?(dx, dy)
+      if @map_data.is_accessible?(dx, dy)
+        @pos = [dx, dy]
+        @status = :MOVE
+      end
     else
       nil
     end

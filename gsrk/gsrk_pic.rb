@@ -19,11 +19,54 @@
   end
   
   def draw
+    case @player_data.status
+    when :NOTHING
+      draw_nothing
+    when :MOVE
+      draw_move
+    else
+      nil
+    end
+  end
+  
+  def draw_move
     x, y = @player_data.pos
+    dx = dy = 0
+    case @player_data.direction
+    when :U
+      dy = -1
+    when :B
+      dy = 1
+    when :L
+      dx = -1
+    when :R
+      dx = 1
+    end
+    @ax ||= Map_pic::WIDTH * - dx
+    @ay ||= Map_pic::HEIGHT * - dy
+    mx = Map_pic::WIDTH * x + @x_offset + @ax
+    my = Map_pic::HEIGHT * y + @y_offset + @ay
+    draw_player(mx, my)
+    @ax += dx
+    @ay += dy
+    if @ax == 0 and @ay == 0
+      @ax = @ay = nil
+      @player_data.status = :NOTHING
+    end
+  end
+
+  def draw_nothing
+    x, y = @player_data.pos
+    x = Map_pic::WIDTH * x + @x_offset
+    y = Map_pic::HEIGHT * y + @y_offset
+    draw_player(x, y)
+  end
+  
+  def draw_player(x, y)
     base = Player_data::Direction[@player_data.direction]
     base = base * OFFSET
     i = Gosu::milliseconds / 200 % OFFSET
-    @image[base + i].draw(Map_pic::WIDTH * x + @x_offset, Map_pic::HEIGHT * y + @y_offset, 0)
+    @image[base + i].draw(x, y, 0)
   end
 end
 
